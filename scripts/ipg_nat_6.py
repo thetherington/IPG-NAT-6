@@ -120,41 +120,46 @@ class IPGNAT6:
 
         for result in results["result"]["parameters"]:
 
-            # seperate "240.1.1@i" to "[240.1.1, @i]"
-            _id = result["id"].split("@")[0]
+            try:
 
-            # split the instance and type notation, then convert the
-            # instance back to base 1 for port number
-            _core_instance = _id.split(".")[1]
-            _core_instance = int(_core_instance) + 1
+                # seperate "240.1.1@i" to "[240.1.1, @i]"
+                _id = result["id"].split("@")[0]
 
-            key = result["name"]
+                # split the instance and type notation, then convert the
+                # instance back to base 1 for port number
+                _core_instance = _id.split(".")[1]
+                _core_instance = int(_core_instance) + 1
 
-            if "port_status" in key:
+                key = result["name"]
 
-                lookup = {0: "DOWN", 1: "UP"}
-                result["value"] = lookup[result["value"]]
+                if "port_status" in key:
 
-            if "rate" in key:
-                result["value"] = result["value"] * 1000
+                    lookup = {0: "DOWN", 1: "UP"}
+                    result["value"] = lookup[result["value"]]
 
-            # create port key and object if doesn't exist, otherwise update existing key/object
-            if _core_instance not in cores.keys():
+                if "rate" in key:
+                    result["value"] = result["value"] * 1000
 
-                cores.update(
-                    {
-                        _core_instance: {
-                            key: result["value"],
-                            "as_id": [result["id"]],
-                            "i_core": _core_instance,
+                # create port key and object if doesn't exist, otherwise update existing key/object
+                if _core_instance not in cores.keys():
+
+                    cores.update(
+                        {
+                            _core_instance: {
+                                key: result["value"],
+                                "as_id": [result["id"]],
+                                "i_core": _core_instance,
+                            }
                         }
-                    }
-                )
+                    )
 
-            else:
+                else:
 
-                cores[_core_instance].update({key: result["value"]})
-                cores[_core_instance]["as_id"].append(result["id"])
+                    cores[_core_instance].update({key: result["value"]})
+                    cores[_core_instance]["as_id"].append(result["id"])
+
+            except Exception as error:
+                print(error)
 
         return cores
 
